@@ -3,8 +3,8 @@
 #include <ESP8266WiFi.h>
 
 #ifndef STASSID
-#define STASSID "****"
-#define STAPSK "****"
+#define STASSID "*****"
+#define STAPSK "*****"
 #endif
 
 const char *ssid = STASSID;
@@ -20,4 +20,7 @@ void setupWifi()
     delay(5000);
     ESP.restart();
   }
+  Serial.println("Connected! Yee!");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
 }
