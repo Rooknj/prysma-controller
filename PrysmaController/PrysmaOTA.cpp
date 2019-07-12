@@ -4,7 +4,7 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 
-void setupOTA()
+void setupOTA(char *hostname)
 {
   // Port defaults to 8266
   // ArduinoOTA.setPort(8266);
@@ -31,16 +31,18 @@ void setupOTA()
     }
 
     // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-    Serial.println("Start updating " + type);
+    Serial.println("[INFO]: OTA Start updating " + type);
+    digitalWrite(LED_BUILTIN, LOW);
   });
   ArduinoOTA.onEnd([]() {
-    Serial.println("\nEnd");
+    Serial.println("\n[INFO]: OTA End");
+    digitalWrite(LED_BUILTIN, HIGH);
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    Serial.printf("[INFO]: Progress - %u%%\r", (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
+    Serial.printf("[Error]: (%u) - ", error);
     if (error == OTA_AUTH_ERROR)
     {
       Serial.println("Auth Failed");
@@ -62,9 +64,12 @@ void setupOTA()
       Serial.println("End Failed");
     }
   });
+
+  ArduinoOTA.setHostname(hostname);
   ArduinoOTA.begin();
 }
 
-void handleOTA() {
+void handleOTA()
+{
   ArduinoOTA.handle();
 }

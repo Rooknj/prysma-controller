@@ -3,6 +3,6 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 
-void setupOTA();
+void setupOTA(char *hostname);
 
 void handleOTA();

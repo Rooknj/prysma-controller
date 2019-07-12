@@ -1,26 +1,33 @@
 #include "PrysmaWifi.h"
-#include <Arduino.h>
-#include <ESP8266WiFi.h>
+#include <Arduino.h>     // Enables use of Arduino specific functions and types
+#include <ESP8266WiFi.h> // ESP8266 Core WiFi Library
+#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager WiFi Configuration Magic
 
-#ifndef STASSID
-#define STASSID "*****"
-#define STAPSK "*****"
-#endif
-
-const char *ssid = STASSID;
-const char *password = STAPSK;
-
-void setupWifi()
+void setupWifi(char *accessPointName)
 {
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  while (WiFi.waitForConnectResult() != WL_CONNECTED)
+  // Autoconnect to Wifi
+  WiFiManager wifiManager;
+
+  // Set static IP address if one is provided
+  // #ifdef STATIC_IP
+  //   Serial.print("INFO: adding static IP ");
+  //   Serial.println(STATIC_IP);
+  //   IPAddress _ip, _gw, _sn;
+  //   _ip.fromString(STATIC_IP);
+  //   _gw.fromString(STATIC_GW);
+  //   _sn.fromString(STATIC_SN);
+  //   wifiManager.setSTAStaticIPConfig(_ip, _gw, _sn);
+  // #endif
+
+  if (!wifiManager.autoConnect(accessPointName))
   {
-    Serial.println("Connection Failed! Rebooting...");
+    Serial.println("[ERROR]: failed to connect to Wifi");
+    Serial.println("[DEBUG]: try resetting the module");
+    delay(3000);
+    ESP.reset();
     delay(5000);
-    ESP.restart();
   }
-  Serial.println("Connected! Yee!");
-  Serial.print("IP address: ");
+  Serial.println("[INFO]: Connected to Wifi :)");
+  Serial.print("[INFO]: IP address: ");
   Serial.println(WiFi.localIP());
 }
