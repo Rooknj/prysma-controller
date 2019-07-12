@@ -8,6 +8,7 @@
  */
 #include <ESP8266WiFi.h>
 
+#include "PrysmaConfig.h"
 #include "PrysmaWifi.h";
 #include "PrysmaOTA.h";
 
@@ -17,6 +18,10 @@ byte mac[6];
 void setup()
 {
   Serial.begin(115200);
+  
+  // init the builtin led on the ESP8266
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
 
   // Generate this light's unique ID from the mac address
   WiFi.macAddress(mac);
@@ -31,6 +36,7 @@ void setup()
 
   Serial.printf("[INFO]: %s Ready\n", PRYSMA_ID);
   
+  test();
 }
 
 void loop()

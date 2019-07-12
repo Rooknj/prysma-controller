@@ -14,6 +14,9 @@ Prysma-Controller
 4. Select the correct board: Tools -> Board -> NodeMCU 1.0
 5. Set a fast upload speed: Upload Speed -> 460800
 
+## SPIFFS File Uploader Setup
+1. https://github.com/esp8266/arduino-esp8266fs-plugin#installation
+
 ## Install Libraries
 - WiFiManager by Tzapu: Version 0.14.0 (or latest)
 <!-- - PubSubClient by Niick O'Leary: Version 2.7.0 (or latest)

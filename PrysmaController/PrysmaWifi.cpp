@@ -19,6 +19,9 @@ void setupWifi(char *accessPointName)
   //   wifiManager.setSTAStaticIPConfig(_ip, _gw, _sn);
   // #endif
 
+  // Turn the built in LED on when not connected to WIFI
+  digitalWrite(LED_BUILTIN, LOW);
+  
   if (!wifiManager.autoConnect(accessPointName))
   {
     Serial.println("[ERROR]: failed to connect to Wifi");
@@ -27,6 +30,8 @@ void setupWifi(char *accessPointName)
     ESP.reset();
     delay(5000);
   }
+  // Turn the built in LED off when connected to WIFI
+  digitalWrite(LED_BUILTIN, HIGH);
   Serial.println("[INFO]: Connected to Wifi :)");
   Serial.print("[INFO]: IP address: ");
   Serial.println(WiFi.localIP());
