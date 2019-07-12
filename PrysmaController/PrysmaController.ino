@@ -24,7 +24,7 @@ void setup()
   Serial.printf("[INFO]: %s Booting\n", PRYSMA_ID);
 
   // Connect to WiFi
-  setupWifi();
+  setupWifi(PRYSMA_ID);
 
   // Configure Over the air uploads
   setupOTA();

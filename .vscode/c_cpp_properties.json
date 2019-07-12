@@ -6,6 +6,7 @@
                 "ARDUINO=10800"
             ],
             "includePath": [
+                "/Users/nrook/Documents/Arduino/libraries/WiFiManager",
                 "${workspaceRoot}",
                 "/Users/nrook/Library/Arduino15/packages/esp8266/hardware/esp8266/2.5.2/**",
                 "/Users/nrook/Library/Arduino15/packages/esp8266/tools/**",
