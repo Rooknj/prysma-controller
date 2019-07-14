@@ -18,7 +18,7 @@ byte mac[6];
 void setup()
 {
   Serial.begin(115200);
-  
+
   // init the builtin led on the ESP8266
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
@@ -29,17 +29,17 @@ void setup()
   Serial.printf("[INFO]: %s Booting\n", PRYSMA_ID);
 
   // Connect to WiFi
-  setupWifi(PRYSMA_ID);
+  PrysmaWifi::setupWifi(PRYSMA_ID);
 
   // Configure Over the air uploads
-  setupOTA(PRYSMA_ID);
+  PrysmaOTA::setupOTA(PRYSMA_ID);
 
   Serial.printf("[INFO]: %s Ready\n", PRYSMA_ID);
-  
+
   test();
 }
 
 void loop()
 {
-  handleOTA();
+  PrysmaOTA::handleOTA();
 }

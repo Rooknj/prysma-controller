@@ -4,7 +4,9 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 
-void setupOTA(char *hostname)
+using namespace PrysmaOTA;
+
+void PrysmaOTA::setupOTA(char *hostname)
 {
   // Port defaults to 8266
   // ArduinoOTA.setPort(8266);
@@ -69,7 +71,7 @@ void setupOTA(char *hostname)
   ArduinoOTA.begin();
 }
 
-void handleOTA()
+void PrysmaOTA::handleOTA()
 {
   ArduinoOTA.handle();
 }

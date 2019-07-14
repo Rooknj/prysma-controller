@@ -3,7 +3,9 @@
 #include <ESP8266WiFi.h> // ESP8266 Core WiFi Library
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager WiFi Configuration Magic
 
-void setupWifi(char *accessPointName)
+using namespace PrysmaWifi;
+
+void PrysmaWifi::setupWifi(char *accessPointName)
 {
   // Autoconnect to Wifi
   WiFiManager wifiManager;
@@ -21,7 +23,7 @@ void setupWifi(char *accessPointName)
 
   // Turn the built in LED on when not connected to WIFI
   digitalWrite(LED_BUILTIN, LOW);
-  
+
   if (!wifiManager.autoConnect(accessPointName))
   {
     Serial.println("[ERROR]: failed to connect to Wifi");
