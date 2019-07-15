@@ -1,18 +1,18 @@
-#include "PrysmaMQTT.h"
+#include "PrysmaMDNS.h"
 #include <Arduino.h>      // Enables use of Arduino specific functions and types
 #include <ESP8266mDNS.h>  // Enables finding addresses in the .local domain
 
-using namespace PrysmaMQTT;
+using namespace PrysmaMDNS;
 
 long lastQueryAttempt = 0;
-char *PrysmaMQTT::findMqttBrokerIp() {
+MqttBroker PrysmaMDNS::findMqttBroker() {
   // Find all mqtt service advertisements over MDNS
   int n = MDNS.queryService("mqtt", "tcp");
 
   // If none were found, return null;
   if (n == 0) {
-    Serial.println("[INFO]: No MQTT services found");
-    return NULL;
+    Serial.println("[WARNING]: No MQTT services found");
+    return {false};
   }
 
   // Loop through all the services found and pick the best one
@@ -29,9 +29,8 @@ char *PrysmaMQTT::findMqttBrokerIp() {
 
     // Services at prysma.local take priority
     if (SERVICE_NAME.indexOf("prysma") >= 0) {
-      char mqttBrokerIp[16];
-      SERVICE_IP.toString().toCharArray(mqttBrokerIp, sizeof(mqttBrokerIp));
-      return mqttBrokerIp;
+      MqttBroker mqttBroker = {true, SERVICE_NAME, SERVICE_IP, SERVICE_PORT};
+      return mqttBroker;
     }
   }
 
@@ -39,7 +38,6 @@ char *PrysmaMQTT::findMqttBrokerIp() {
   // first ip address that came up
   char mqttBrokerIp[16];
   MDNS.IP(0).toString().toCharArray(mqttBrokerIp, sizeof(mqttBrokerIp));
-  return mqttBrokerIp;
+  MqttBroker mqttBroker = {true, MDNS.hostname(0), MDNS.IP(0), MDNS.port(0)};
+  return mqttBroker;
 }
-
-void PrysmaMQTT::setupMQTT() {}
