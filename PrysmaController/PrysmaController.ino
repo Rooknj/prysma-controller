@@ -8,36 +8,17 @@
  */
 
 #include <ESP8266WiFi.h>
-#include <PubSubClient.h>  // MQTT client library
 
 #include "PrysmaConfig.h"
-#include "PrysmaMDNS.h";
+#include "PrysmaMQTT.h";
 #include "PrysmaOTA.h";
 #include "PrysmaWifi.h";
 
 #define DEBUG true
 
-// MQTT topic-name strings
-#define MQTT_TOP "prysma"
-#define MQTT_CONNECTED "connected"
-#define MQTT_EFFECT_LIST "effects"
-#define MQTT_STATE "state"
-#define MQTT_COMMAND "command"
-#define MQTT_CONFIG "config"
-
 // Prysma Variables
 char PRYSMA_ID[19];
 byte mac[6];
-
-// MQTT Variables
-// TODO: if MQTT_MAX_PACKET_SIZE is less than 512, display a warning that this
-WiFiClient wifiClient;
-PubSubClient pubSubClient(wifiClient);
-char PRYSMA_CONNECTED_TOPIC[50];    // for sending connection messages
-char PRYSMA_EFFECT_LIST_TOPIC[50];  // for sending the effect list
-char PRYSMA_STATE_TOPIC[50];        // for sending the state
-char PRYSMA_COMMAND_TOPIC[50];      // for receiving commands
-char PRYSMA_CONFIG_TOPIC[50];       // for sending config info
 
 void setup() {
   if (DEBUG) {
@@ -64,26 +45,7 @@ void setup() {
 
   test();
 
-  setupMqttClient();
-}
-
-void setupMqttClient() {
-  pubSubClient.setCallback(onMqttMessage);
-  snprintf(PRYSMA_CONNECTED_TOPIC, sizeof(PRYSMA_CONNECTED_TOPIC), "%s/%s/%s",
-           MQTT_TOP, PRYSMA_ID, MQTT_CONNECTED);
-  snprintf(PRYSMA_EFFECT_LIST_TOPIC, sizeof(PRYSMA_CONNECTED_TOPIC), "%s/%s/%s",
-           MQTT_TOP, PRYSMA_ID, MQTT_EFFECT_LIST);
-  snprintf(PRYSMA_STATE_TOPIC, sizeof(PRYSMA_CONNECTED_TOPIC), "%s/%s/%s",
-           MQTT_TOP, PRYSMA_ID, MQTT_STATE);
-  snprintf(PRYSMA_COMMAND_TOPIC, sizeof(PRYSMA_CONNECTED_TOPIC), "%s/%s/%s",
-           MQTT_TOP, PRYSMA_ID, MQTT_COMMAND);
-  snprintf(PRYSMA_CONFIG_TOPIC, sizeof(PRYSMA_CONNECTED_TOPIC), "%s/%s/%s",
-           MQTT_TOP, PRYSMA_ID, MQTT_CONFIG);
-  Serial.printf("[INFO]: Connected Topic - %s\n", PRYSMA_CONNECTED_TOPIC);
-  Serial.printf("[INFO]: Effect List Topic - %s\n", PRYSMA_EFFECT_LIST_TOPIC);
-  Serial.printf("[INFO]: State Topic - %s\n", PRYSMA_STATE_TOPIC);
-  Serial.printf("[INFO]: Command Topic - %s\n", PRYSMA_COMMAND_TOPIC);
-  Serial.printf("[INFO]: Config Topic - %s\n", PRYSMA_CONFIG_TOPIC);
+  PrysmaMQTT::setupMQTT(PRYSMA_ID, onMqttMessage);
 }
 
 void onMqttMessage(char *topic, byte *payload, unsigned int length) {
@@ -98,55 +60,7 @@ void onMqttMessage(char *topic, byte *payload, unsigned int length) {
   Serial.println(message);
 }
 
-boolean connectToMqtt() {
-  PrysmaMDNS::MqttBroker mqttBroker = PrysmaMDNS::findMqttBroker();
-
-  if (!mqttBroker.wasFound) {
-    Serial.println("[WARNING]: MQTT Broker Not Found");
-    return false;
-  }
-
-  pubSubClient.setServer(mqttBroker.ip, mqttBroker.port);
-
-  if (pubSubClient.connect(PRYSMA_ID, "pi", "MQTTIsBetterThanUDP")) {
-    Serial.println("[INFO]: Connected to MQTT broker at " +
-                   mqttBroker.hostname + " - " + mqttBroker.ip.toString() +
-                   ":" + mqttBroker.port);
-
-    // Publish that we connected
-    // client.publish(MQTT_LIGHT_CONNECTED_TOPIC, buffer, true);
-
-    // publish the initial values
-    // sendState();
-    // sendEffectList();
-    // sendConfig(false);
-
-    // Subscribe to all light topics
-    pubSubClient.subscribe(PRYSMA_COMMAND_TOPIC);
-  }
-  return pubSubClient.connected();
-}
-
-long lastMqttConnectionAttempt = 0;
 void loop() {
   PrysmaOTA::handleOTA();
-
-  // If not connected, attempt to make a connection every 5 seconds
-  if (!pubSubClient.connected()) {
-    long now = millis();
-    if (now - lastMqttConnectionAttempt > 5000) {
-      Serial.println("[INFO]: Attempting MQTT connection...");
-      lastMqttConnectionAttempt = now;
-      // Attempt to reconnect
-      if (connectToMqtt()) {
-        lastMqttConnectionAttempt = 0;
-      } else {
-        Serial.print("[WARNING]: Failed MQTT Connection, rc=");
-        Serial.println(pubSubClient.state());
-        Serial.println("[INFO]: Attempting again in 5 seconds");
-      }
-    }
-  } else {
-    pubSubClient.loop();
-  }
+  PrysmaMQTT::handleMQTT();
 }
