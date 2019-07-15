@@ -1,12 +1,11 @@
 #include "PrysmaWifi.h"
-#include <Arduino.h>     // Enables use of Arduino specific functions and types
-#include <ESP8266WiFi.h> // ESP8266 Core WiFi Library
-#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager WiFi Configuration Magic
+#include <Arduino.h>      // Enables use of Arduino specific functions and types
+#include <ESP8266WiFi.h>  // ESP8266 Core WiFi Library
+#include <WiFiManager.h>  // https://github.com/tzapu/WiFiManager WiFi Configuration Magic
 
 using namespace PrysmaWifi;
 
-void PrysmaWifi::setupWifi(char *accessPointName)
-{
+void PrysmaWifi::setupWifi(char *accessPointName) {
   // Autoconnect to Wifi
   WiFiManager wifiManager;
 
@@ -24,8 +23,7 @@ void PrysmaWifi::setupWifi(char *accessPointName)
   // Turn the built in LED on when not connected to WIFI
   digitalWrite(LED_BUILTIN, LOW);
 
-  if (!wifiManager.autoConnect(accessPointName))
-  {
+  if (!wifiManager.autoConnect(accessPointName)) {
     Serial.println("[ERROR]: failed to connect to Wifi");
     Serial.println("[DEBUG]: try resetting the module");
     delay(3000);

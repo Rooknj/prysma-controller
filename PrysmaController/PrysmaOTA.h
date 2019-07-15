@@ -5,14 +5,13 @@
 #define PrysmaOTA_h
 
 #include <Arduino.h>
+#include <ArduinoOTA.h>
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
-#include <ArduinoOTA.h>
 
-namespace PrysmaOTA
-{
+namespace PrysmaOTA {
 void setupOTA(char *hostname);
 
 void handleOTA();
-} // namespace PrysmaOTA
+}  // namespace PrysmaOTA
 #endif
