@@ -11,6 +11,7 @@
 #include "PrysmaConfig.h"
 #include "PrysmaWifi.h";
 #include "PrysmaOTA.h";
+#include "PrysmaMQTT.h";
 
 char PRYSMA_ID[19];
 byte mac[6];
@@ -37,6 +38,8 @@ void setup()
   Serial.printf("[INFO]: %s Ready\n", PRYSMA_ID);
 
   test();
+
+  PrysmaMQTT::findMqttBrokerIp();
 }
 
 void loop()
