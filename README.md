@@ -16,10 +16,11 @@ Prysma-Controller
 
 ## SPIFFS File Uploader Setup
 1. https://github.com/esp8266/arduino-esp8266fs-plugin#installation
+2. Take templates/config.json and put it in the data folder after filling it out with the appropriate information
 
 ## Install Libraries
 - WiFiManager by Tzapu: Version 0.14.0 (or latest)
 - PubSubClient by Nick O'Leary: Version 2.7.0 (or latest)
   - Go to ~/Documents/Arduino/libraries/PubSubClient/src/PubSubClient.h and change MQTT_MAX_PACKET_SIZE to 512 instead of 128. This is because the messages sent by this app are greater than 128 bytes and will be ignored by the pubsubclient unless increased.
-<!-- - ArduinoJson by Benoit Blanchon: Version 5.13.3 (Will need to manually select this one)
-- FastLED by Daniel Garcia: Version 3.2.6 (or latest) -->
+- ArduinoJson by Benoit Blanchon: Version 6.11.1
+<!-- - FastLED by Daniel Garcia: Version 3.2.6 (or latest) -->

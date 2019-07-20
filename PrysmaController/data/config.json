@@ -4,8 +4,6 @@
   "maxBrightness": 255,
   "stripType": "WS2812B",
   "colorOrder": "GRB",
-  "controllerHardware": "ESP8266",
-  "mqttServerPort": 1883,
-  "mqttUsername": "****",
-  "mqttPassword": "****"
+  "mqttUsername": "pi",
+  "mqttPassword": "MQTTIsBetterThanUDP"
 }

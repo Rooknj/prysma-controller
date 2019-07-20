@@ -6,6 +6,7 @@
                 "ARDUINO=10800"
             ],
             "includePath": [
+                "/Users/nrook/Documents/Arduino/libraries/ArduinoJson/src",
                 "/Users/nrook/Documents/Arduino/libraries/WiFiManager",
                 "/Users/nrook/Documents/Arduino/libraries/PubSubClient",
                 "${workspaceRoot}",

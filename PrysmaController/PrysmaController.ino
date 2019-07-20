@@ -41,10 +41,10 @@ void setup() {
   // Configure Over the air uploads
   PrysmaOTA::setupOTA(PRYSMA_ID);
 
-  Serial.printf("[INFO]: %s Ready\n", PRYSMA_ID);
+  // Read config info from config.json
+  PrysmaConfig::init();
 
-  test();
-
+  // Initialize MQTT client and topics
   PrysmaMQTT::setupMQTT(PRYSMA_ID, onMqttMessage);
 }
 
@@ -61,6 +61,13 @@ void onMqttMessage(char *topic, byte *payload, unsigned int length) {
 }
 
 void loop() {
+  Serial.printf("user: %s pass: %s\n", PrysmaConfig::config.mqttUsername,
+                PrysmaConfig::config.mqttPassword);
+  Serial.printf("user: %s pass: %s\n", PrysmaConfig::config.mqttUsername,
+                PrysmaConfig::config.mqttPassword);
+  Serial.printf("user: %s pass: %s\n", PrysmaConfig::config.mqttUsername,
+                PrysmaConfig::config.mqttPassword);
+  delay(5000);
   PrysmaOTA::handleOTA();
   PrysmaMQTT::handleMQTT();
 }
