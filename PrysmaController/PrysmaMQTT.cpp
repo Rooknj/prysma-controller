@@ -18,6 +18,8 @@ using namespace PrysmaMQTT;
 WiFiClient wifiClient;
 PubSubClient pubSubClient(wifiClient);
 char* MQTT_ID;
+char* MQTT_USERNAME;
+char* MQTT_PASSWORD;
 
 // Header Definitions
 char PrysmaMQTT::PRYSMA_CONNECTED_TOPIC[50];  // for sending connection messages
@@ -64,8 +66,11 @@ MqttBroker PrysmaMQTT::findMqttBroker() {
   return mqttBroker;
 }
 
-void PrysmaMQTT::setupMQTT(char* id, MQTT_CALLBACK_SIGNATURE) {
+void PrysmaMQTT::setupMQTT(char* id, char* username, char* password,
+                           MQTT_CALLBACK_SIGNATURE) {
   MQTT_ID = id;
+  MQTT_USERNAME = username;
+  MQTT_PASSWORD = password;
   pubSubClient.setCallback(callback);
   snprintf(PRYSMA_CONNECTED_TOPIC, sizeof(PRYSMA_CONNECTED_TOPIC), "%s/%s/%s",
            MQTT_TOP, MQTT_ID, MQTT_CONNECTED);
@@ -84,8 +89,8 @@ void PrysmaMQTT::setupMQTT(char* id, MQTT_CALLBACK_SIGNATURE) {
   Serial.printf("[INFO]: Config Topic - %s\n", PRYSMA_CONFIG_TOPIC);
 }
 
-boolean PrysmaMQTT::connectToMQTT() {
-  PrysmaMQTT::MqttBroker mqttBroker = findMqttBroker();
+boolean connectToMQTT() {
+  MqttBroker mqttBroker = findMqttBroker();
 
   if (!mqttBroker.wasFound) {
     Serial.println("[WARNING]: MQTT Broker Not Found");
@@ -94,7 +99,7 @@ boolean PrysmaMQTT::connectToMQTT() {
 
   pubSubClient.setServer(mqttBroker.ip, mqttBroker.port);
 
-  if (pubSubClient.connect(MQTT_ID, "pi", "MQTTIsBetterThanUDP")) {
+  if (pubSubClient.connect(MQTT_ID, MQTT_USERNAME, MQTT_PASSWORD)) {
     Serial.println("[INFO]: Connected to MQTT broker at " +
                    mqttBroker.hostname + " - " + mqttBroker.ip.toString() +
                    ":" + mqttBroker.port);

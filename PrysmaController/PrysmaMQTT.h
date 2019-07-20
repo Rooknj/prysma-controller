@@ -27,9 +27,7 @@ extern char PRYSMA_CONFIG_TOPIC[50];       // for sending config info
 
 MqttBroker findMqttBroker();
 
-void setupMQTT(char* id, MQTT_CALLBACK_SIGNATURE);
-
-boolean connectToMQTT();
+void setupMQTT(char* id, char* username, char* password, MQTT_CALLBACK_SIGNATURE);
 
 void handleMQTT();
 
