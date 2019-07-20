@@ -12,9 +12,7 @@
                 "${workspaceRoot}",
                 "/Users/nrook/Library/Arduino15/packages/esp8266/hardware/esp8266/2.5.2/**",
                 "/Users/nrook/Library/Arduino15/packages/esp8266/tools/**",
-                "/Users/nrook/Applications/hardware/tools/**",
-                "/Users/nrook/Applications/libraries/**",
-                "/Users/nrook/Documents/Arduino/hardware/tools/**",
+                "/Users/nrook/Documents/Arduino/tools/**",
                 "/Users/nrook/Documents/Arduino/libraries/**"
             ],
             "forcedInclude": [],
