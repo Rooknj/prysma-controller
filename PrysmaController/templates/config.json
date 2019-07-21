@@ -4,6 +4,6 @@
   "maxBrightness": 255,
   "stripType": "WS2812B",
   "colorOrder": "GRB",
-  "mqttUsername": "pi",
-  "mqttPassword": "MQTTIsBetterThanUDP"
+  "mqttUsername": "****",
+  "mqttPassword": "****"
 }
