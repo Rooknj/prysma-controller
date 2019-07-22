@@ -25,6 +25,9 @@ byte mac[6];
 char connectedMessage[50];
 char disconnectedMessage[50];
 
+unsigned int mutationId;
+bool mutationIdWasChanged = false;
+
 //*******************************************************
 // MQTT Message Handlers
 //*******************************************************
@@ -39,7 +42,14 @@ void setupConnectedMessages() {
 }
 
 // Send the state of the light via MQTT
-void sendState() { Serial.println("Send State"); }
+void sendState() {
+  Serial.println("Send State");
+
+  // populate payload with mutationId if one was sent
+  if (mutationIdWasChanged) {
+    Serial.println("Mutation Id: " + mutationId);
+  }
+}
 
 // Send the list of supported effects via MQTT
 void sendEffectList() { Serial.println("Send Effect List"); }
@@ -53,9 +63,21 @@ void sendDiscoveryResponse() { Serial.println("Send Discovery Response"); }
 // Deal with a message on the command topic
 void handleCommand(byte *payload) {
   Serial.println("[INFO]: Handling Command Message");
+
+  // Parse JSON
   StaticJsonDocument<512> doc;
-  deserializeJson(doc, payload);
+  DeserializationError error = deserializeJson(doc, payload);
+  if (error) {
+    Serial.println("[ERROR]: Failed to parse config message JSON");
+    return;
+  }
+  // Pretty print JSON
   serializeJsonPretty(doc, Serial);
+
+  if (doc.containsKey("mutationId") && doc["mutationId"] != mutationId) {
+    mutationId = doc["mutationId"];
+    mutationIdWasChanged = true;
+  }
 
   sendState();
 }
