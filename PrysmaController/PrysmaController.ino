@@ -50,7 +50,8 @@ void setup() {
   // Initialize MQTT client and topics
   Serial.println("--- MQTT Setup ---");
   PrysmaMQTT::setupMQTT(PRYSMA_ID, PrysmaConfig::config.mqttUsername,
-                        PrysmaConfig::config.mqttPassword, onMqttMessage);
+                        PrysmaConfig::config.mqttPassword);
+  PrysmaMQTT::onConnect(handleConnect);
 }
 
 void onMqttMessage(char *topic, byte *payload, unsigned int length) {
@@ -63,6 +64,17 @@ void onMqttMessage(char *topic, byte *payload, unsigned int length) {
   message[length] = '\0';
 
   Serial.println(message);
+}
+
+void handleConnect() {
+  Serial.println("Conn123");
+  // Publish that we connected
+  // client.publish(MQTT_LIGHT_CONNECTED_TOPIC, buffer, true);
+
+  // publish the initial values
+  // sendState();
+  // sendEffectList();
+  // sendConfig(false);
 }
 
 void loop() {
