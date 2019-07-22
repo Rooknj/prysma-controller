@@ -29,9 +29,9 @@ extern char EFFECT_LIST_TOPIC[50];         // for sending the effect list
 extern char STATE_TOPIC[50];               // for sending the state
 extern char COMMAND_TOPIC[50];             // for receiving commands
 extern char CONFIG_TOPIC[50];              // for sending config info
-extern char DISCOVERY_TOPIC[50];           // for sending config info
-extern char DISCOVERY_RESPONSE_TOPIC[50];  // for sending config info
-extern char IDENTIFY_TOPIC[50];            // for sending config info
+extern char DISCOVERY_TOPIC[50];           // for receiving discovery queries
+extern char DISCOVERY_RESPONSE_TOPIC[50];  // for sending discovery responses
+extern char IDENTIFY_TOPIC[50];            // for receiving identify commands
 
 void setupMQTT(char* id, char* username, char* password);
 void handleMQTT();
