@@ -37,21 +37,20 @@ void setup() {
 
   // Connect to WiFi
   Serial.println("--- WiFi Setup ---");
-  PrysmaWifi::setupWifi(PRYSMA_ID);
+  setupWifi(PRYSMA_ID);
 
   // Configure Over the air uploads
   Serial.println("--- OTA Setup ---");
-  PrysmaOTA::setupOTA(PRYSMA_ID);
+  setupOTA(PRYSMA_ID);
 
   // Read config info from config.json
   Serial.println("--- Config Setup ---");
-  PrysmaConfig::init();
+  setupConfig();
 
   // Initialize MQTT client and topics
   Serial.println("--- MQTT Setup ---");
-  PrysmaMQTT::setupMQTT(PRYSMA_ID, PrysmaConfig::config.mqttUsername,
-                        PrysmaConfig::config.mqttPassword);
-  PrysmaMQTT::onConnect(handleConnect);
+  setupMQTT(PRYSMA_ID, config.mqttUsername, config.mqttPassword);
+  onConnect(handleConnect);
 }
 
 void onMqttMessage(char *topic, byte *payload, unsigned int length) {
@@ -78,6 +77,6 @@ void handleConnect() {
 }
 
 void loop() {
-  PrysmaOTA::handleOTA();
-  PrysmaMQTT::handleMQTT();
+  handleOTA();
+  handleMQTT();
 }

@@ -2,11 +2,9 @@
 #include <ArduinoJson.h>
 #include "FS.h"
 
-using namespace PrysmaConfig;
+Config config;
 
-Config PrysmaConfig::config;
-
-void PrysmaConfig::init() {
+void setupConfig() {
   // Initialize SPIFFS
   if (!SPIFFS.begin()) {
     Serial.println("[ERROR]: An Error has occurred while mounting SPIFFS");

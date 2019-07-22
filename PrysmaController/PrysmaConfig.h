@@ -8,8 +8,7 @@
 #include <Arduino.h>  // Enables use of Arduino specific functions and types
 #include "FS.h"
 
-namespace PrysmaConfig {
-void init();
+void setupConfig();
 
 struct Config {
   int numLeds;
@@ -24,7 +23,5 @@ struct Config {
 };
 
 extern Config config;
-
-}  // namespace PrysmaConfig
 
 #endif

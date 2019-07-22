@@ -9,9 +9,8 @@
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
 
-namespace PrysmaOTA {
 void setupOTA(char *hostname);
 
 void handleOTA();
-}  // namespace PrysmaOTA
+
 #endif

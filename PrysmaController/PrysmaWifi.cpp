@@ -3,9 +3,7 @@
 #include <ESP8266WiFi.h>  // ESP8266 Core WiFi Library
 #include <WiFiManager.h>  // https://github.com/tzapu/WiFiManager WiFi Configuration Magic
 
-using namespace PrysmaWifi;
-
-void PrysmaWifi::setupWifi(char *accessPointName) {
+void setupWifi(char *accessPointName) {
   // Autoconnect to Wifi
   WiFiManager wifiManager;
 

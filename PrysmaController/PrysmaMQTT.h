@@ -6,9 +6,9 @@
 #define PrysmaMQTT_h
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <ESP8266mDNS.h>   // Enables finding addresses in the .local domain
 #include <PubSubClient.h>  // MQTT client library
-#include <ArduinoJson.h>
 
 // MQTT topic-name strings
 #define MQTT_TOP "prysma"
@@ -20,8 +20,6 @@
 #define MQTT_DISCOVERY "discovery"
 #define MQTT_DISCOVERY_RESPONSE "hello"
 #define MQTT_IDENTIFY "identify"
-
-namespace PrysmaMQTT {
 
 // These need to be extern or else you get a "multiple definition" error
 extern char CONNECTED_TOPIC[50];           // for sending connection messages
@@ -37,14 +35,5 @@ void setupMQTT(char* id, char* username, char* password);
 void handleMQTT();
 
 void onConnect(void (*callback)());
-void onCommand(void (*callback)(char*));
-void onIdentify(void (*callback)(char*));
-void onDiscovery(void (*callback)(char*));
-
-void sendState();
-void sendEffectList();
-void sendConfig();
-void sendDiscoveryResponse();
-}  // namespace PrysmaMQTT
 
 #endif

@@ -4,9 +4,7 @@
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
 
-using namespace PrysmaOTA;
-
-void PrysmaOTA::setupOTA(char *hostname) {
+void setupOTA(char *hostname) {
   Serial.println("[INFO]: OTA Initializing");
 
   ArduinoOTA.onStart([]() {
@@ -60,4 +58,4 @@ void PrysmaOTA::setupOTA(char *hostname) {
   Serial.println("[INFO]: OTA Ready");
 }
 
-void PrysmaOTA::handleOTA() { ArduinoOTA.handle(); }
+void handleOTA() { ArduinoOTA.handle(); }

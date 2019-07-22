@@ -4,8 +4,6 @@
 #include <ESP8266mDNS.h>   // Enables finding addresses in the .local domain
 #include <PubSubClient.h>  // MQTT client library
 
-using namespace PrysmaMQTT;
-
 // MQTT Variables
 // TODO: if MQTT_MAX_PACKET_SIZE is less than 512, display a warning that this
 WiFiClient wifiClient;
@@ -21,14 +19,14 @@ void (*discoveryCallback)(char*);
 void (*identifyCallback)(char*);
 
 // Header Definitions
-char PrysmaMQTT::CONNECTED_TOPIC[50];    // for sending connection messages
-char PrysmaMQTT::EFFECT_LIST_TOPIC[50];  // for sending the effect list
-char PrysmaMQTT::STATE_TOPIC[50];        // for sending the state
-char PrysmaMQTT::COMMAND_TOPIC[50];      // for receiving commands
-char PrysmaMQTT::CONFIG_TOPIC[50];       // for sending config info
-char PrysmaMQTT::DISCOVERY_TOPIC[50];    // for sending config info
-char PrysmaMQTT::DISCOVERY_RESPONSE_TOPIC[50];  // for sending config info
-char PrysmaMQTT::IDENTIFY_TOPIC[50];            // for sending config info
+char CONNECTED_TOPIC[50];           // for sending connection messages
+char EFFECT_LIST_TOPIC[50];         // for sending the effect list
+char STATE_TOPIC[50];               // for sending the state
+char COMMAND_TOPIC[50];             // for receiving commands
+char CONFIG_TOPIC[50];              // for sending config info
+char DISCOVERY_TOPIC[50];           // for sending config info
+char DISCOVERY_RESPONSE_TOPIC[50];  // for sending config info
+char IDENTIFY_TOPIC[50];            // for sending config info
 
 typedef struct {
   bool wasFound;
@@ -86,7 +84,7 @@ void handleMessage(char* topic, byte* payload, unsigned int length) {
   Serial.println(message);
 }
 
-void PrysmaMQTT::setupMQTT(char* id, char* username, char* password) {
+void setupMQTT(char* id, char* username, char* password) {
   MQTT_ID = id;
   MQTT_USERNAME = username;
   MQTT_PASSWORD = password;
@@ -160,7 +158,7 @@ boolean connectToMQTT() {
 }
 
 long lastMqttConnectionAttempt = 0;
-void PrysmaMQTT::handleMQTT() {
+void handleMQTT() {
   // If not connected, attempt to make a connection every 5 seconds
   if (!pubSubClient.connected()) {
     long now = millis();
@@ -181,13 +179,7 @@ void PrysmaMQTT::handleMQTT() {
   }
 }
 
-void PrysmaMQTT::onConnect(void (*callback)()) { connectCallback = callback; }
-void PrysmaMQTT::onCommand(void (*callback)(char*)) {
-  commandCallback = callback;
-}
-void PrysmaMQTT::onDiscovery(void (*callback)(char*)) {
-  discoveryCallback = callback;
-}
-void PrysmaMQTT::onIdentify(void (*callback)(char*)) {
-  identifyCallback = callback;
-}
+void onConnect(void (*callback)()) { connectCallback = callback; }
+void onCommand(void (*callback)(char*)) { commandCallback = callback; }
+void onDiscovery(void (*callback)(char*)) { discoveryCallback = callback; }
+void onIdentify(void (*callback)(char*)) { identifyCallback = callback; }
