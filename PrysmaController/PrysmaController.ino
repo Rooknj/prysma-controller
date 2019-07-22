@@ -7,6 +7,7 @@
     ╚═╝     ╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝
  */
 
+#include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 
 #include "PrysmaConfig.h"
@@ -16,10 +17,99 @@
 
 #define DEBUG true
 
-// Prysma Variables
+//*******************************************************
+// Global Variables
+//*******************************************************
 char PRYSMA_ID[19];
 byte mac[6];
+char connectedMessage[50];
+char disconnectedMessage[50];
 
+//*******************************************************
+// MQTT Message Handlers
+//*******************************************************
+// Generate the messages to be send on connect/disconnect from MQTT
+void setupConnectedMessages() {
+  StaticJsonDocument<50> doc;
+  doc["id"] = PRYSMA_ID;
+  doc["connected"] = true;
+  serializeJson(doc, connectedMessage);
+  doc["connected"] = false;
+  serializeJson(doc, disconnectedMessage);
+}
+
+// Send the state of the light via MQTT
+void sendState() { Serial.println("Send State"); }
+
+// Send the list of supported effects via MQTT
+void sendEffectList() { Serial.println("Send Effect List"); }
+
+// Send the config of the light via MQTT
+void sendConfig() { Serial.println("Send Config"); }
+
+// Respond to a discovery query with the config information of the light
+void sendDiscoveryResponse() { Serial.println("Send Discovery Response"); }
+
+// Deal with a message on the command topic
+void handleCommand(byte *payload) {
+  Serial.println("[INFO]: Handling Command Message");
+  StaticJsonDocument<512> doc;
+  deserializeJson(doc, payload);
+  serializeJsonPretty(doc, Serial);
+
+  sendState();
+}
+
+// Deal with a discovery query
+void handleDiscovery() {
+  Serial.println("[INFO]: Handling Discovery Message");
+  sendDiscoveryResponse();
+}
+
+// Deal with an identify command
+void handleIdentify() { Serial.println("[INFO]: Handling Identify Message"); }
+
+void handleMessage(char *topic, byte *payload, unsigned int length) {
+  Serial.printf("[INFO]: Message arrived on <%s>\n", topic);
+
+  // Route the message to the appropriate handler
+  if (strcmp(topic, COMMAND_TOPIC) == 0) {
+    handleCommand(payload);
+  } else if (strcmp(topic, DISCOVERY_TOPIC) == 0) {
+    handleDiscovery();
+  } else if (strcmp(topic, IDENTIFY_TOPIC) == 0) {
+    handleIdentify();
+  } else {
+    Serial.println(
+        "[WARNING]: Incoming message topic did not match any that we are "
+        "supposed to be subscribed to");
+  }
+}
+
+// Handle MQTT connections
+void handleConnect() {
+  // Subscribe to all relevent topics
+  mqttClient.subscribe(COMMAND_TOPIC);
+  Serial.printf("[INFO]: Subscribed to %s\n", COMMAND_TOPIC);
+  mqttClient.subscribe(DISCOVERY_TOPIC);
+  Serial.printf("[INFO]: Subscribed to %s\n", DISCOVERY_TOPIC);
+  mqttClient.subscribe(IDENTIFY_TOPIC);
+  Serial.printf("[INFO]: Subscribed to %s\n", IDENTIFY_TOPIC);
+
+  // Publish that we are connected;
+  mqttClient.publish(CONNECTED_TOPIC, connectedMessage, true);
+  Serial.printf("[INFO]: Published %s to <%s>\n", connectedMessage,
+                CONNECTED_TOPIC);
+
+  // Publish all current light values over MQTT
+  sendState();
+  sendEffectList();
+  sendConfig();
+}
+
+//*******************************************************
+// Main Functions
+//*******************************************************
 void setup() {
   if (DEBUG) {
     Serial.begin(115200);
@@ -49,34 +139,14 @@ void setup() {
 
   // Initialize MQTT client and topics
   Serial.println("--- MQTT Setup ---");
-  setupMQTT(PRYSMA_ID, config.mqttUsername, config.mqttPassword);
-  onConnect(handleConnect);
-}
-
-void onMqttMessage(char *topic, byte *payload, unsigned int length) {
-  Serial.printf("[INFO]: Message arrived on [%s]\n", topic);
-
-  char message[length + 1];
-  for (int i = 0; i < length; i++) {
-    message[i] = (char)payload[i];
-  }
-  message[length] = '\0';
-
-  Serial.println(message);
-}
-
-void handleConnect() {
-  Serial.println("Conn123");
-  // Publish that we connected
-  // client.publish(MQTT_LIGHT_CONNECTED_TOPIC, buffer, true);
-
-  // publish the initial values
-  // sendState();
-  // sendEffectList();
-  // sendConfig(false);
+  setupConnectedMessages();
+  setupMqttTopics(PRYSMA_ID);
+  onMqttConnect(handleConnect);
+  onMqttMessage(handleMessage);
 }
 
 void loop() {
   handleOTA();
-  handleMQTT();
+  handleMqtt(PRYSMA_ID, config.mqttUsername, config.mqttPassword,
+             CONNECTED_TOPIC, 0, true, disconnectedMessage);
 }

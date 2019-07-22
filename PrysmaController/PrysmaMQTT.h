@@ -1,16 +1,16 @@
 /*
-  PrysmaMQTT.h - Library for connecting Prysma-Controller to the MQTT broker and
+  PrysmaMqtt.h - Library for connecting Prysma-Controller to the Mqtt broker and
   handling messages
 */
-#ifndef PrysmaMQTT_h
-#define PrysmaMQTT_h
+#ifndef PrysmaMqtt_h
+#define PrysmaMqtt_h
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <ESP8266mDNS.h>   // Enables finding addresses in the .local domain
-#include <PubSubClient.h>  // MQTT client library
+#include <PubSubClient.h>  // Mqtt client library
 
-// MQTT topic-name strings
+// Mqtt topic-name strings
 #define MQTT_TOP "prysma"
 #define MQTT_CONNECTED "connected"
 #define MQTT_EFFECT_LIST "effects"
@@ -31,9 +31,16 @@ extern char DISCOVERY_TOPIC[50];           // for receiving discovery queries
 extern char DISCOVERY_RESPONSE_TOPIC[50];  // for sending discovery responses
 extern char IDENTIFY_TOPIC[50];            // for receiving identify commands
 
-void setupMQTT(char* id, char* username, char* password);
-void handleMQTT();
+extern PubSubClient mqttClient;
 
-void onConnect(void (*callback)());
+void setupMqttTopics(char* id);
+
+void handleMqtt(const char* id, const char* user, const char* pass,
+                          const char* willTopic, uint8_t willQos,
+                          boolean willRetain, const char* willMessage);
+
+void onMqttMessage(MQTT_CALLBACK_SIGNATURE);
+
+void onMqttConnect(void (*callback)());
 
 #endif

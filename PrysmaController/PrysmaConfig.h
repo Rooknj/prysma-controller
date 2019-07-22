@@ -16,7 +16,7 @@ struct Config {
   int clockPin;
   int maxBrightness;
   char stripType[16];
-  char colorOrder[3];
+  char colorOrder[4];
   char controllerHardware[16];
   char mqttUsername[50];
   char mqttPassword[50];
