@@ -25,7 +25,7 @@ byte mac[6];
 char connectedMessage[50];
 char disconnectedMessage[50];
 
-unsigned int mutationId;
+char mutationId[37]; // uuidv4 (36 characters + 1)
 bool mutationIdWasChanged = false;
 
 //*******************************************************
@@ -47,7 +47,7 @@ void sendState() {
 
   // populate payload with mutationId if one was sent
   if (mutationIdWasChanged) {
-    Serial.println("Mutation Id: " + mutationId);
+    Serial.printf("Mutation Id: %s\n", mutationId);
   }
 }
 
@@ -73,9 +73,13 @@ void handleCommand(byte *payload) {
   }
   // Pretty print JSON
   serializeJsonPretty(doc, Serial);
+  Serial.println();  // Add a linebreak to the end
 
-  if (doc.containsKey("mutationId") && doc["mutationId"] != mutationId) {
-    mutationId = doc["mutationId"];
+  if (doc.containsKey("mutationId") &&
+      strcmp(doc["mutationId"], mutationId) != 0) {
+    strlcpy(mutationId,                 // <- destination
+            doc["mutationId"],          // <- source
+            sizeof(mutationId));  // <- destination's capacity
     mutationIdWasChanged = true;
   }
 
