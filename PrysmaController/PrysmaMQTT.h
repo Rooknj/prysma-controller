@@ -13,12 +13,12 @@
 // Mqtt topic-name strings
 #define MQTT_TOP "prysma"
 #define MQTT_CONNECTED "connected"
-#define MQTT_EFFECT_LIST "effects"
+#define MQTT_EFFECT_LIST "effectList"
 #define MQTT_STATE "state"
 #define MQTT_COMMAND "command"
 #define MQTT_CONFIG "config"
 #define MQTT_DISCOVERY "discovery"
-#define MQTT_DISCOVERY_RESPONSE "hello"
+#define MQTT_DISCOVERY_RESPONSE "discoveryResponse"
 #define MQTT_IDENTIFY "identify"
 
 // These need to be extern or else you get a "multiple definition" error
