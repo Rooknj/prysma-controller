@@ -16,16 +16,16 @@
 #include "PrysmaWifi.h";
 
 #define DEBUG true
+#define VERSION "2.0.0"
 
 //*******************************************************
 // Global Variables
 //*******************************************************
 char PRYSMA_ID[19];
-byte mac[6];
 char connectedMessage[50];
 char disconnectedMessage[50];
 
-char mutationId[37]; // uuidv4 (36 characters + 1)
+char mutationId[37];  // uuidv4 (36 characters + 1)
 bool mutationIdWasChanged = false;
 
 //*******************************************************
@@ -55,10 +55,31 @@ void sendState() {
 void sendEffectList() { Serial.println("Send Effect List"); }
 
 // Send the config of the light via MQTT
-void sendConfig() { Serial.println("Send Config"); }
+void sendConfig(boolean discoveryResponse = false) {
+  StaticJsonDocument<512> doc;
+  doc["id"] = PRYSMA_ID;
+  doc["version"] = VERSION;
+  doc["hardware"] = config.controllerHardware;
+  doc["colorOrder"] = config.colorOrder;
+  doc["stripType"] = config.stripType;
+  doc["ipAddress"] = WiFi.localIP().toString();
+  doc["macAddress"] = WiFi.macAddress();
+  doc["numLeds"] = config.numLeds;
+  doc["udpPort"] = 7778;
+
+  char configMessage[512];
+  serializeJson(doc, configMessage);
+
+  if (discoveryResponse) {
+    // Send a one time message to the discovery response (dont retain the message)
+    mqttClient.publish(DISCOVERY_RESPONSE_TOPIC, configMessage);
+  } else {
+    mqttClient.publish(CONFIG_TOPIC, configMessage, true);
+  }
+}
 
 // Respond to a discovery query with the config information of the light
-void sendDiscoveryResponse() { Serial.println("Send Discovery Response"); }
+void sendDiscoveryResponse() { sendConfig(true); }
 
 // Deal with a message on the command topic
 void handleCommand(byte *payload) {
@@ -77,8 +98,8 @@ void handleCommand(byte *payload) {
 
   if (doc.containsKey("mutationId") &&
       strcmp(doc["mutationId"], mutationId) != 0) {
-    strlcpy(mutationId,                 // <- destination
-            doc["mutationId"],          // <- source
+    strlcpy(mutationId,           // <- destination
+            doc["mutationId"],    // <- source
             sizeof(mutationId));  // <- destination's capacity
     mutationIdWasChanged = true;
   }
@@ -146,6 +167,7 @@ void setup() {
   digitalWrite(LED_BUILTIN, HIGH);
 
   // Generate this light's unique ID from the mac address
+  byte mac[6];
   WiFi.macAddress(mac);
   snprintf(PRYSMA_ID, sizeof(PRYSMA_ID), "Prysma-%02X%02X%02X%02X%02X%02X",
            mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
