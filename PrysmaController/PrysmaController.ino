@@ -10,6 +10,7 @@
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 
+#include "Light.h";
 #include "PrysmaConfig.h"
 #include "PrysmaMQTT.h";
 #include "PrysmaOTA.h";
@@ -22,11 +23,14 @@
 // Global Variables
 //*******************************************************
 char PRYSMA_ID[19];
+
 char connectedMessage[50];
 char disconnectedMessage[50];
 
 char mutationId[37];  // uuidv4 (36 characters + 1)
 bool mutationIdWasChanged = false;
+
+Light light;
 
 //*******************************************************
 // MQTT Message Handlers
@@ -42,16 +46,21 @@ void setupConnectedMessages() {
 }
 
 // Send the state of the light via MQTT
+// TODO: Implement
 void sendState() {
   Serial.println("Send State");
-
+  StaticJsonDocument<512> doc;
+  doc["id"] = PRYSMA_ID;
   // populate payload with mutationId if one was sent
   if (mutationIdWasChanged) {
     Serial.printf("Mutation Id: %s\n", mutationId);
+    doc["mutationId"] = mutationId;
+    bool mutationIdWasChanged = false;
   }
 }
 
 // Send the list of supported effects via MQTT
+// TODO: Implement
 void sendEffectList() { Serial.println("Send Effect List"); }
 
 // Send the config of the light via MQTT
@@ -71,10 +80,15 @@ void sendConfig(boolean discoveryResponse = false) {
   serializeJson(doc, configMessage);
 
   if (discoveryResponse) {
-    // Send a one time message to the discovery response (dont retain the message)
+    // Send a one time message to the discovery response (dont retain the
+    // message)
     mqttClient.publish(DISCOVERY_RESPONSE_TOPIC, configMessage);
+    Serial.printf("[INFO]: Published %s to <%s>\n", configMessage,
+                  DISCOVERY_RESPONSE_TOPIC);
   } else {
     mqttClient.publish(CONFIG_TOPIC, configMessage, true);
+    Serial.printf("[INFO]: Published %s to <%s>\n", configMessage,
+                  CONFIG_TOPIC);
   }
 }
 
@@ -96,12 +110,44 @@ void handleCommand(byte *payload) {
   serializeJsonPretty(doc, Serial);
   Serial.println();  // Add a linebreak to the end
 
+  // Update the next sendState response with the mutationId
   if (doc.containsKey("mutationId") &&
       strcmp(doc["mutationId"], mutationId) != 0) {
     strlcpy(mutationId,           // <- destination
             doc["mutationId"],    // <- source
             sizeof(mutationId));  // <- destination's capacity
     mutationIdWasChanged = true;
+  }
+
+  // Handle the actual commands
+  if (doc.containsKey("on")) {
+    bool on = doc["on"];
+    Serial.printf("Turn Light %s\n", on ? "ON" : "OFF");
+  }
+
+  if (doc.containsKey("brightness")) {
+    byte brightness = doc["brightness"];
+    Serial.printf("Set Brightness to %i\n", brightness);
+  }
+
+  if (doc.containsKey("color")) {
+    byte r = doc["color"]["r"];
+    byte g = doc["color"]["g"];
+    byte b = doc["color"]["b"];
+    Serial.printf("Set Color to r:%i g:%i b:%i\n", r, g, b);
+  }
+
+  if (doc.containsKey("effect")) {
+    char effect[30];
+    strlcpy(effect,           // <- destination
+            doc["effect"],    // <- source
+            sizeof(effect));  // <- destination's capacity
+    Serial.printf("Set Effect to %s\n", effect);
+  }
+
+  if (doc.containsKey("speed")) {
+    byte speed = doc["speed"];
+    Serial.printf("Set Effect to %i\n", speed);
   }
 
   sendState();
@@ -114,6 +160,7 @@ void handleDiscovery() {
 }
 
 // Deal with an identify command
+// TODO: Implement
 void handleIdentify() { Serial.println("[INFO]: Handling Identify Message"); }
 
 void handleMessage(char *topic, byte *payload, unsigned int length) {
@@ -191,10 +238,15 @@ void setup() {
   setupMqttTopics(PRYSMA_ID);
   onMqttConnect(handleConnect);
   onMqttMessage(handleMessage);
+
+  // Initialize the light
+  light.init(config.numLeds, config.stripType, config.colorOrder,
+             config.dataPin, config.clockPin, config.maxBrightness);
 }
 
 void loop() {
   handleOTA();
   handleMqtt(PRYSMA_ID, config.mqttUsername, config.mqttPassword,
              CONNECTED_TOPIC, 0, true, disconnectedMessage);
+  light.loop();
 }
