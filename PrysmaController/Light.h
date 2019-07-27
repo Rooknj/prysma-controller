@@ -5,7 +5,7 @@
 #define Light_h
 
 #include <Arduino.h>
-#define FASTLED_INTERNAL // Disable pragma messages
+#define FASTLED_INTERNAL  // Disable pragma messages
 #include <FastLED.h>
 
 #define NO_EFFECT "None"
@@ -13,32 +13,36 @@
 typedef struct {
   bool on;
   byte brightness;
-  byte r;
-  byte g;
-  byte b;
-  char* effect;
+  CRGB color;
+  String effect;
   byte speed;
 } LightState;
 
 class Light {
  private:
-  // int numEffects = 3;
-  // String effectList[this->numEffects] = {"Test 1", "Test 2", "Test 3"};
-  String effectList[3] = {"Test 1", "Test 2", "Test 3"};
+  unsigned int numEffects = 3;
+  String effectList[3] = {"Effect 1", "Effect 2", "Effect 3"};
   CRGB leds[512];
   int numLeds;
   byte maxBrightness;
+  LightState state;
+  void setTargetColor(CRGB color);
+  void setTargetBrightness(byte brightness);
 
  public:
   Light();
-  void init(int numLeds, char* stripType, char* colorOrder, int dataPin, int clockPin, byte maxBrightness);
+  void init(int numLeds, char* stripType, char* colorOrder, int dataPin,
+            int clockPin, byte maxBrightness);
   void loop();
-  void setOn(bool on);
+  void identify();
+  void turnOn();
+  void turnOff();
   void setBrightness(byte brightness);
-  void setColor(byte r, byte g, byte b);
-  void setEffect(char* effect);
+  void setColor(CRGB color);
+  void setEffect(String effect);
   void setSpeed(byte speed);
   LightState getState();
+  unsigned int getNumEffects();
   String* getEffectList();
 };
 

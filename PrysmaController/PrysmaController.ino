@@ -46,22 +46,53 @@ void setupConnectedMessages() {
 }
 
 // Send the state of the light via MQTT
-// TODO: Implement
 void sendState() {
-  Serial.println("Send State");
   StaticJsonDocument<512> doc;
-  doc["id"] = PRYSMA_ID;
+
   // populate payload with mutationId if one was sent
   if (mutationIdWasChanged) {
     Serial.printf("Mutation Id: %s\n", mutationId);
     doc["mutationId"] = mutationId;
     bool mutationIdWasChanged = false;
   }
+
+  doc["id"] = PRYSMA_ID;
+
+  LightState state = light.getState();
+  doc["on"] = state.on;
+  doc["brightness"] = state.brightness;
+  JsonObject color = doc.createNestedObject("color");
+  color["r"] = state.color.r;
+  color["g"] = state.color.g;
+  color["b"] = state.color.b;
+  doc["effect"] = state.effect;
+  doc["speed"] = state.speed;
+
+  char stateMessage[512];
+  serializeJson(doc, stateMessage);
+
+  mqttClient.publish(STATE_TOPIC, stateMessage);
+  Serial.printf("[INFO]: Published %s to <%s>\n", stateMessage, STATE_TOPIC);
 }
 
 // Send the list of supported effects via MQTT
-// TODO: Implement
-void sendEffectList() { Serial.println("Send Effect List"); }
+void sendEffectList() {
+  Serial.println("Send Effect List");
+  StaticJsonDocument<512> doc;
+  doc["id"] = PRYSMA_ID;
+  JsonArray effectList = doc.createNestedArray("effectList");
+  String *effects = light.getEffectList();
+  for (int i = 0; i < light.getNumEffects(); i++) {
+    effectList.add(effects[i]);
+  }
+  
+  char effectListMessage[512];
+  serializeJson(doc, effectListMessage);
+
+  mqttClient.publish(EFFECT_LIST_TOPIC, effectListMessage);
+  Serial.printf("[INFO]: Published %s to <%s>\n", effectListMessage,
+                EFFECT_LIST_TOPIC);
+}
 
 // Send the config of the light via MQTT
 void sendConfig(boolean discoveryResponse = false) {
@@ -122,32 +153,33 @@ void handleCommand(byte *payload) {
   // Handle the actual commands
   if (doc.containsKey("on")) {
     bool on = doc["on"];
-    Serial.printf("Turn Light %s\n", on ? "ON" : "OFF");
+    if (on) {
+      light.turnOn();
+    } else {
+      light.turnOff();
+    }
   }
 
   if (doc.containsKey("brightness")) {
     byte brightness = doc["brightness"];
-    Serial.printf("Set Brightness to %i\n", brightness);
+    light.setBrightness(brightness);
   }
 
   if (doc.containsKey("color")) {
     byte r = doc["color"]["r"];
     byte g = doc["color"]["g"];
     byte b = doc["color"]["b"];
-    Serial.printf("Set Color to r:%i g:%i b:%i\n", r, g, b);
+    light.setColor(CRGB(r, g, b));
   }
 
   if (doc.containsKey("effect")) {
-    char effect[30];
-    strlcpy(effect,           // <- destination
-            doc["effect"],    // <- source
-            sizeof(effect));  // <- destination's capacity
-    Serial.printf("Set Effect to %s\n", effect);
+    String effect = doc["effect"];
+    light.setEffect(effect);
   }
 
   if (doc.containsKey("speed")) {
     byte speed = doc["speed"];
-    Serial.printf("Set Effect to %i\n", speed);
+    light.setSpeed(speed);
   }
 
   sendState();
@@ -160,8 +192,10 @@ void handleDiscovery() {
 }
 
 // Deal with an identify command
-// TODO: Implement
-void handleIdentify() { Serial.println("[INFO]: Handling Identify Message"); }
+void handleIdentify() {
+  Serial.println("[INFO]: Handling Identify Message");
+  light.identify();
+}
 
 void handleMessage(char *topic, byte *payload, unsigned int length) {
   Serial.printf("[INFO]: Message arrived on <%s>\n", topic);
