@@ -3,7 +3,7 @@
 #include <FastLED.h>
 
 //************************************************************************
-// Light Public Class Methods
+// Public Methods
 //************************************************************************
 Light::Light() {}
 
@@ -39,6 +39,9 @@ void Light::init(int numLeds, char* stripType, char* colorOrder, int dataPin,
 void Light::loop() {
   // Handle Brightness transitions
   handleBrightnessTransition();
+
+  // Handle Color transitions
+  handleColorTransition();
 
   // Handle when to show the changes to the LEDs
   handleShowLeds();
@@ -86,20 +89,33 @@ void Light::setBrightness(byte brightness) {
 
 void Light::setColor(CRGB color) {
   this->state.color = color;
-  this->state.effect = NO_EFFECT;
+  // Setting a color automatically turns the light on
   if (!this->state.on) {
     turnOn();
   }
-  fill_solid(this->leds, this->numLeds, color);
-  FastLED.show();
+  if (this->state.effect != NO_EFFECT) {
+    // If an effect is playing, just go straight to the color, no transition
+    this->state.effect = NO_EFFECT;
+    this->currentColor = color;
+    fill_solid(this->leds, this->numLeds, color);
+    FastLED.show();
+  } else {
+    transitionColorTo(color);
+  }
 }
+
 void Light::setEffect(String effect) {
   this->state.effect = effect;
   this->state.color = CRGB(255, 255, 255);
+  // Clear the lights when setting an effect
+  fill_solid(this->leds, this->numLeds, CRGB::Black);
+  FastLED.show();
+  // Setting an effect automatically turns the light on
   if (!this->state.on) {
     turnOn();
   }
 }
+
 void Light::setSpeed(byte speed) { this->state.speed = speed; }
 
 LightState Light::getState() { return this->state; }
@@ -109,8 +125,9 @@ unsigned int Light::getNumEffects() { return this->numEffects; }
 String* Light::getEffectList() { return this->effectList; }
 
 //************************************************************************
-// Transition Methods
+// Transitions
 //************************************************************************
+// General
 int Light::getStep(int start, int target, int numSteps) {
   return (target - start) / numSteps;
 }
@@ -134,6 +151,7 @@ int Light::getChange(int stepAmount, int remainderAmount, int currentStep,
   return stepAmount + extra;
 }
 
+// Brightness
 void Light::transitionBrightnessTo(byte brightness) {
   this->startBrightnessTransition = true;
   this->targetBrightness = brightness;
@@ -161,14 +179,15 @@ void Light::handleBrightnessTransition() {
     if (now - this->lastBrightnessStepTime > brightnessStepDuration) {
       this->lastBrightnessStepTime = now;
 
+      // Calculate the amount to change brightness by
       this->currentBrightness +=
           getChange(this->brightnessStepAmount, this->brightnessRemainderAmount,
                     this->currentBrightnessStep, BRIGHTNESS_TRANSITION_STEPS);
-      this->currentBrightnessStep++;
 
       // Set the value and increment the step;
       FastLED.setBrightness(
           map(this->currentBrightness, 0, 100, 0, this->maxBrightness));
+      this->currentBrightnessStep++;
     }
 
     // If we have gone through all the steps, end the transition
@@ -184,12 +203,84 @@ void Light::handleBrightnessTransition() {
   }
 }
 
+// Color
+void Light::transitionColorTo(CRGB color) {
+  this->startColorTransition = true;
+  this->targetColor = color;
+}
+
+void Light::handleColorTransition() {
+  if (this->startColorTransition) {
+    this->startColorTransition = false;
+    this->inColorTransition = true;
+    this->currentColorStep = 1;
+    // Calculate the step values
+    this->redStepAmount = getStep(this->currentColor.r, this->targetColor.r,
+                                  COLOR_TRANSITION_STEPS);
+    this->greenStepAmount = getStep(this->currentColor.g, this->targetColor.g,
+                                    COLOR_TRANSITION_STEPS);
+    this->blueStepAmount = getStep(this->currentColor.b, this->targetColor.b,
+                                   COLOR_TRANSITION_STEPS);
+    this->redRemainderAmount = getRemainder(
+        this->currentColor.r, this->targetColor.r, COLOR_TRANSITION_STEPS);
+    this->greenRemainderAmount = getRemainder(
+        this->currentColor.g, this->targetColor.g, COLOR_TRANSITION_STEPS);
+    this->blueRemainderAmount = getRemainder(
+        this->currentColor.b, this->targetColor.b, COLOR_TRANSITION_STEPS);
+  }
+
+  if (this->inColorTransition) {
+    unsigned long now = millis();
+    unsigned long stepDuration = COLOR_TRANSITION_TIME / COLOR_TRANSITION_STEPS;
+    // If its time to take a step
+    if (now - this->lastColorStepTime > stepDuration) {
+      this->lastColorStepTime = now;
+
+      // Calculate the next value to change to
+      this->currentColor.r +=
+          getChange(this->redStepAmount, this->redRemainderAmount,
+                    this->currentColorStep, COLOR_TRANSITION_STEPS);
+      this->currentColor.g +=
+          getChange(this->greenStepAmount, this->greenRemainderAmount,
+                    this->currentColorStep, COLOR_TRANSITION_STEPS);
+      this->currentColor.b +=
+          getChange(this->blueStepAmount, this->blueRemainderAmount,
+                    this->currentColorStep, COLOR_TRANSITION_STEPS);
+
+      // Set the value and increment the step;
+      fill_solid(this->leds, this->numLeds, this->currentColor);
+      this->currentColorStep++;
+
+      // If we have gone through all the steps, end the transition
+      if (this->currentColorStep > COLOR_TRANSITION_STEPS) {
+        this->inColorTransition = false;
+        // We call show here because Light::shouldShowLeds won't trigger on the
+        // last iteration since we set inColorTransition to false
+        FastLED.show();
+        Serial.println("Ending Color Transition: ");
+        Serial.printf("Current Red: %i, Current Green: %i, Current Blue: %i\n",
+                      this->currentColor.r, this->currentColor.g,
+                      this->currentColor.b);
+        Serial.printf("target Red: %i, target Green: %i, target Blue: %i\n",
+                      this->targetColor.r, this->targetColor.g,
+                      this->targetColor.b);
+      }
+    }
+  }
+}
+
 //************************************************************************
-// Effect Methods
+// Effects
 //************************************************************************
+// General
 bool Light::shouldShowLeds() {
   // If you are in a brightness transition, show leds
   if (this->inBrightnessTransition) {
+    return true;
+  }
+
+  // If you are in a color transition, show leds
+  if (this->inColorTransition) {
     return true;
   }
 
