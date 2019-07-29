@@ -5,13 +5,7 @@
 //************************************************************************
 // Public Methods
 //************************************************************************
-Light::Light() {
-  // I need to set this here instead of in the header file or the compiler
-  // throws an error
-  this->heatPalette = HeatColors_p;
-  this->targetPalette = OceanColors_p;
-  this->currentPalette = CRGB(0, 0, 0);
-}
+Light::Light() {}
 
 void Light::init(int numLeds, char* stripType, char* colorOrder, int dataPin,
                  int clockPin, byte maxBrightness) {
@@ -450,7 +444,7 @@ void Light::handleCylon() {
   this->leds[this->cylonLed] = CHSV(this->gHue, 255, 255);
 }
 
-// Rainbow
+// Fire
 void Light::handleFire() {
   // Step 1.  Cool down every cell a little
   for (int i = 0; i < this->numLeds; i++) {
@@ -475,7 +469,7 @@ void Light::handleFire() {
     // Scale the this->heat value from 0-255 down to 0-240
     // for best results with color palettes.
     byte colorindex = scale8(this->heat[j], 240);
-    CRGB color = ColorFromPalette(this->heatPalette, colorindex);
+    CRGB color = ColorFromPalette(HeatColors_p, colorindex);
     int pixelnumber;
     if (this->fireReverseDirection) {
       pixelnumber = (this->numLeds - 1) - j;
@@ -486,24 +480,20 @@ void Light::handleFire() {
   }
 }
 
-// Rainbow
+// Blue Noise
 void Light::handleBlueNoise() {
-  nblendPaletteTowardPalette(this->currentPalette, this->targetPalette,
-                             this->maxChanges);
-
   // Just one loop to fill up the LED array as all of the pixels change.
   for (int i = 0; i < this->numLeds; i++) {
     // Get a value from the noise function. I'm using both x and y axis.
-    uint8_t index = inoise8(i * scale, dist + i * scale) % 255;
+    uint8_t index =
+        inoise8(i * this->scale, this->dist + i * this->scale) % 255;
     // With that value, look up the 8 bit colour palette
     // value and assign it to the current LED.
-    this->leds[i] =
-        ColorFromPalette(this->currentPalette, index, 255, LINEARBLEND);
+    this->leds[i] = ColorFromPalette(OceanColors_p, index, 255, LINEARBLEND);
   }
   // Moving along the distance (that random number we started out with). Vary it
-  // a bit with a sine wave. In some sketches, I've used millis() instead of an
-  // incremented counter. Works a treat.
-  this->dist += beatsin8(10, 1, 4);
+  // a bit with a sine wave.
+  this->dist += beatsin8(10, 2, 5);
 }
 
 // ADD_EFFECT: Add the effect handler code below
