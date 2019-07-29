@@ -196,9 +196,9 @@ void Light::handleBrightnessTransition() {
       // We call show here because Light::shouldShowLeds won't trigger on the
       // last iteration since we set inBrightnessTransition to false
       FastLED.show();
-      Serial.println("Ending Brightness Transition: ");
-      Serial.printf("Current Brightness: %i\n", this->currentBrightness);
-      Serial.printf("target Brightness: %i\n", this->targetBrightness);
+      // Serial.println("Ending Brightness Transition: ");
+      // Serial.printf("Current Brightness: %i\n", this->currentBrightness);
+      // Serial.printf("target Brightness: %i\n", this->targetBrightness);
     }
   }
 }
@@ -257,13 +257,13 @@ void Light::handleColorTransition() {
         // We call show here because Light::shouldShowLeds won't trigger on the
         // last iteration since we set inColorTransition to false
         FastLED.show();
-        Serial.println("Ending Color Transition: ");
-        Serial.printf("Current Red: %i, Current Green: %i, Current Blue: %i\n",
-                      this->currentColor.r, this->currentColor.g,
-                      this->currentColor.b);
-        Serial.printf("target Red: %i, target Green: %i, target Blue: %i\n",
-                      this->targetColor.r, this->targetColor.g,
-                      this->targetColor.b);
+        // Serial.println("Ending Color Transition: ");
+        // Serial.printf("Current Red: %i, Current Green: %i, Current Blue: %i\n",
+        //               this->currentColor.r, this->currentColor.g,
+        //               this->currentColor.b);
+        // Serial.printf("target Red: %i, target Green: %i, target Blue: %i\n",
+        //               this->targetColor.r, this->targetColor.g,
+        //               this->targetColor.b);
       }
     }
   }
