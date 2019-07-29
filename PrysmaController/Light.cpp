@@ -5,7 +5,13 @@
 //************************************************************************
 // Public Methods
 //************************************************************************
-Light::Light() {}
+Light::Light() {
+  // I need to set this here instead of in the header file or the compiler
+  // throws an error
+  this->heatPalette = HeatColors_p;
+  this->targetPalette = OceanColors_p;
+  this->currentPalette = CRGB(0, 0, 0);
+}
 
 void Light::init(int numLeds, char* stripType, char* colorOrder, int dataPin,
                  int clockPin, byte maxBrightness) {
@@ -309,6 +315,12 @@ void Light::handleShowLeds() {
 }
 
 bool Light::shouldUpdateEffect() {
+  // Don't update the effect if the light is off or currently transitioning to
+  // be off
+  if (!this->state.on && !this->inBrightnessTransition) {
+    return false;
+  }
+
   String currentEffect = this->state.effect;
 
   // ADD_EFFECT: Add the appropriate update threshold if the default speeds are
@@ -316,7 +328,8 @@ bool Light::shouldUpdateEffect() {
   unsigned long updateThreshold;
   if (currentEffect == "Flash") {
     updateThreshold = this->FLASH_SPEEDS[this->state.speed - 1];
-  } else if (currentEffect == "Juggle") {
+  } else if (currentEffect == "Juggle" || currentEffect == "Fire" ||
+             currentEffect == "Blue Noise") {
     updateThreshold = 17;
   } else {
     updateThreshold = this->DEFAULT_SPEEDS[this->state.speed - 1];
@@ -351,6 +364,12 @@ void Light::handleEffect() {
     handleJuggle();
   } else if (currentEffect == "Rainbow") {
     handleRainbow();
+  } else if (currentEffect == "Cylon") {
+    handleCylon();
+  } else if (currentEffect == "Fire") {
+    handleFire();
+  } else if (currentEffect == "Blue Noise") {
+    handleBlueNoise();
   }
 }
 
@@ -391,7 +410,7 @@ void Light::handleConfetti() {
   this->leds[pos] += CHSV(gHue + random8(64), 200, 255);
 }
 
-// Confetti
+// Juggle
 void Light::handleJuggle() {
   // eight colored dots, weaving in and out of sync with each other
   fadeToBlackBy(this->leds, this->numLeds,
@@ -404,11 +423,87 @@ void Light::handleJuggle() {
   }
 }
 
-// Confetti
+// Rainbow
 void Light::handleRainbow() {
   cycleHue();
   // The shorter the last number, the longer each color is on the rainbow
   fill_rainbow(this->leds, this->numLeds, this->gHue, 3);
+}
+
+// Cylon
+void Light::handleCylon() {
+  cycleHue();
+  for (int i = 0; i < this->numLeds; i++) {
+    this->leds[i].nscale8(247);
+  }
+  // First slide the led in one direction
+  if (this->cylonLed >= this->numLeds - 1) {
+    this->cylonForward = false;
+  } else if (this->cylonLed <= 0) {
+    this->cylonForward = true;
+  }
+  if (this->cylonForward) {
+    this->cylonLed++;
+  } else {
+    this->cylonLed--;
+  }
+  this->leds[this->cylonLed] = CHSV(this->gHue, 255, 255);
+}
+
+// Rainbow
+void Light::handleFire() {
+  // Step 1.  Cool down every cell a little
+  for (int i = 0; i < this->numLeds; i++) {
+    this->heat[i] = qsub8(
+        this->heat[i], random8(0, ((this->COOLING * 10) / this->numLeds) + 2));
+  }
+
+  // Step 2.  Heat from each cell drifts 'up' and diffuses a little
+  for (int k = this->numLeds - 1; k >= 2; k--) {
+    this->heat[k] =
+        (this->heat[k - 1] + this->heat[k - 2] + this->heat[k - 2]) / 3;
+  }
+
+  // Step 3.  Randomly ignite new 'sparks' of this->heat near the bottom
+  if (random8() < this->SPARKING) {
+    int y = random8(7);
+    this->heat[y] = qadd8(this->heat[y], random8(160, 255));
+  }
+
+  // Step 4.  Map from this->heat cells to LED colors
+  for (int j = 0; j < this->numLeds; j++) {
+    // Scale the this->heat value from 0-255 down to 0-240
+    // for best results with color palettes.
+    byte colorindex = scale8(this->heat[j], 240);
+    CRGB color = ColorFromPalette(this->heatPalette, colorindex);
+    int pixelnumber;
+    if (this->fireReverseDirection) {
+      pixelnumber = (this->numLeds - 1) - j;
+    } else {
+      pixelnumber = j;
+    }
+    this->leds[pixelnumber] = color;
+  }
+}
+
+// Rainbow
+void Light::handleBlueNoise() {
+  nblendPaletteTowardPalette(this->currentPalette, this->targetPalette,
+                             this->maxChanges);
+
+  // Just one loop to fill up the LED array as all of the pixels change.
+  for (int i = 0; i < this->numLeds; i++) {
+    // Get a value from the noise function. I'm using both x and y axis.
+    uint8_t index = inoise8(i * scale, dist + i * scale) % 255;
+    // With that value, look up the 8 bit colour palette
+    // value and assign it to the current LED.
+    this->leds[i] =
+        ColorFromPalette(this->currentPalette, index, 255, LINEARBLEND);
+  }
+  // Moving along the distance (that random number we started out with). Vary it
+  // a bit with a sine wave. In some sketches, I've used millis() instead of an
+  // incremented counter. Works a treat.
+  this->dist += beatsin8(10, 1, 4);
 }
 
 // ADD_EFFECT: Add the effect handler code below

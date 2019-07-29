@@ -65,8 +65,9 @@ class Light {
   void handleColorTransition();
   // Effect List Variables
   // ADD_EFFECT: Increment numEffects and add the effect to the list
-  unsigned int numEffects = 5;
-  String effectList[5] = {"Flash", "Fade", "Confetti", "Juggle", "Rainbow"};
+  unsigned int numEffects = 8;
+  String effectList[8] = {"Flash",   "Fade",  "Confetti", "Juggle",
+                          "Rainbow", "Cylon", "Fire",     "Blue Noise"};
   // Effects: General
   unsigned long lastShowLedsTime = 0;
   bool shouldShowLeds();
@@ -92,6 +93,25 @@ class Light {
   void handleJuggle();
   // Effects: Rainbow
   void handleRainbow();
+  // Effects: Cylon
+  int cylonLed = 0;
+  bool cylonForward = true;
+  void handleCylon();
+  // Effects: Fire
+  const int COOLING = 55;
+  const int SPARKING = 120;
+  bool fireReverseDirection = false;  // make fire run from the other end
+  CRGBPalette16 heatPalette;
+  byte heat[500];  // TODO: Figure out if i can dynamically allocate this memory
+  void handleFire();
+  // Effects: Blue Noise
+  uint16_t dist;  // A random number for our noise generator.
+  uint16_t scale = 30;   // Wouldn't recommend changing this on the fly, or the
+                         // animation will be really blocky.
+  uint8_t maxChanges = 48;  // Value for blending between palettes.
+  CRGBPalette16 targetPalette;
+  CRGBPalette16 currentPalette;
+  void handleBlueNoise();
 
  public:
   Light();
