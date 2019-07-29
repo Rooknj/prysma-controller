@@ -43,6 +43,9 @@ void Light::loop() {
   // Handle Color transitions
   handleColorTransition();
 
+  // Handle the currently playing effect
+  handleEffect();
+
   // Handle when to show the changes to the LEDs
   handleShowLeds();
 }
@@ -98,7 +101,6 @@ void Light::setColor(CRGB color) {
     this->state.effect = NO_EFFECT;
     this->currentColor = color;
     fill_solid(this->leds, this->numLeds, color);
-    FastLED.show();
   } else {
     transitionColorTo(color);
   }
@@ -258,7 +260,8 @@ void Light::handleColorTransition() {
         // last iteration since we set inColorTransition to false
         FastLED.show();
         // Serial.println("Ending Color Transition: ");
-        // Serial.printf("Current Red: %i, Current Green: %i, Current Blue: %i\n",
+        // Serial.printf("Current Red: %i, Current Green: %i, Current Blue:
+        // %i\n",
         //               this->currentColor.r, this->currentColor.g,
         //               this->currentColor.b);
         // Serial.printf("target Red: %i, target Green: %i, target Blue: %i\n",
@@ -304,3 +307,108 @@ void Light::handleShowLeds() {
     FastLED.show();
   }
 }
+
+bool Light::shouldUpdateEffect() {
+  String currentEffect = this->state.effect;
+
+  // ADD_EFFECT: Add the appropriate update threshold if the default speeds are
+  // inadequate
+  unsigned long updateThreshold;
+  if (currentEffect == "Flash") {
+    updateThreshold = this->FLASH_SPEEDS[this->state.speed - 1];
+  } else if (currentEffect == "Juggle") {
+    updateThreshold = 17;
+  } else {
+    updateThreshold = this->DEFAULT_SPEEDS[this->state.speed - 1];
+  }
+
+  unsigned long now = millis();
+  if (now - this->lastUpdateEffectTime > updateThreshold) {
+    this->lastUpdateEffectTime = now;
+    return true;
+  }
+  return false;
+}
+
+void Light::handleEffect() {
+  String currentEffect = this->state.effect;
+  if (currentEffect == NO_EFFECT) {
+    return;
+  }
+
+  if (!shouldUpdateEffect()) {
+    return;
+  }
+
+  // ADD_EFFECT: Add the effect to this handler
+  if (currentEffect == "Flash") {
+    handleFlash();
+  } else if (currentEffect == "Fade") {
+    handleFade();
+  } else if (currentEffect == "Confetti") {
+    handleConfetti();
+  } else if (currentEffect == "Juggle") {
+    handleJuggle();
+  } else if (currentEffect == "Rainbow") {
+    handleRainbow();
+  }
+}
+
+void Light::cycleHue() { this->gHue++; }
+
+// Flash
+void Light::handleFlash() {
+  switch (this->flashColor) {
+    case 0: {
+      fill_solid(this->leds, this->numLeds, CRGB::Red);
+      this->flashColor = 1;
+      break;
+    }
+    case 1: {
+      fill_solid(this->leds, this->numLeds, CRGB::Green);
+      this->flashColor = 2;
+      break;
+    }
+    case 2: {
+      fill_solid(this->leds, this->numLeds, CRGB::Blue);
+      this->flashColor = 0;
+      break;
+    }
+  }
+}
+
+// Fade
+void Light::handleFade() {
+  cycleHue();
+  fill_solid(this->leds, this->numLeds, CHSV(gHue, 255, 255));
+}
+
+// Confetti
+void Light::handleConfetti() {
+  cycleHue();
+  fadeToBlackBy(this->leds, this->numLeds, 10);
+  int pos = random16(this->numLeds);
+  this->leds[pos] += CHSV(gHue + random8(64), 200, 255);
+}
+
+// Confetti
+void Light::handleJuggle() {
+  // eight colored dots, weaving in and out of sync with each other
+  fadeToBlackBy(this->leds, this->numLeds,
+                this->JUGGLE_FADE[this->state.speed - 1]);
+  byte dothue = 0;
+  for (int i = 0; i < 8; i++) {
+    this->leds[beatsin16(i + this->JUGGLE_BPMS_ADDER[this->state.speed - 1], 0,
+                         this->numLeds - 1)] |= CHSV(dothue, 200, 255);
+    dothue += 32;
+  }
+}
+
+// Confetti
+void Light::handleRainbow() {
+  cycleHue();
+  // The shorter the last number, the longer each color is on the rainbow
+  fill_rainbow(this->leds, this->numLeds, this->gHue, 3);
+}
+
+// ADD_EFFECT: Add the effect handler code below

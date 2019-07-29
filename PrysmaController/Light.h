@@ -64,12 +64,34 @@ class Light {
   void transitionColorTo(CRGB color);
   void handleColorTransition();
   // Effect List Variables
-  unsigned int numEffects = 3;
-  String effectList[3] = {"Effect 1", "Effect 2", "Effect 3"};
+  // ADD_EFFECT: Increment numEffects and add the effect to the list
+  unsigned int numEffects = 5;
+  String effectList[5] = {"Flash", "Fade", "Confetti", "Juggle", "Rainbow"};
   // Effects: General
   unsigned long lastShowLedsTime = 0;
   bool shouldShowLeds();
   void handleShowLeds();
+  const int DEFAULT_SPEEDS[7] = {200, 100, 50, 33, 20, 10, 4};  // In ms
+  unsigned long lastUpdateEffectTime = 0;
+  bool shouldUpdateEffect();
+  void handleEffect();
+  byte gHue = 0;
+  void cycleHue();
+  // Effects: Flash
+  const int FLASH_SPEEDS[7] = {
+      4000, 2000, 1000, 500, 350, 200, 100};  // In ms between color transitions
+  byte flashColor = 0;
+  void handleFlash();
+  // Effects: Fade
+  void handleFade();
+  // Effects: Confetti
+  void handleConfetti();
+  // Effects: Juggle
+  const int JUGGLE_BPMS_ADDER[7] = {1, 4, 7, 10, 13, 17, 20};
+  const int JUGGLE_FADE[7] = {20, 25, 30, 35, 40, 45, 50};
+  void handleJuggle();
+  // Effects: Rainbow
+  void handleRainbow();
 
  public:
   Light();
