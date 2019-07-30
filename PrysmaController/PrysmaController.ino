@@ -85,7 +85,7 @@ void sendEffectList() {
   for (int i = 0; i < light.getNumEffects(); i++) {
     effectList.add(effects[i]);
   }
-  
+
   char effectListMessage[512];
   serializeJson(doc, effectListMessage);
 

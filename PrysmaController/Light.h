@@ -16,6 +16,10 @@
 #define BRIGHTNESS_TRANSITION_STEPS 30
 #define COLOR_TRANSITION_TIME 500
 #define COLOR_TRANSITION_STEPS 30
+// Maximum number of packets to hold in the buffer. Don't change this.
+#define BUFFER_LEN 1024
+// Toggles FPS output (1 = print FPS over serial, 0 = disable output)
+#define PRINT_FPS 1
 
 typedef struct {
   bool on;
@@ -65,9 +69,9 @@ class Light {
   void handleColorTransition();
   // Effect List Variables
   // ADD_EFFECT: Increment numEffects and add the effect to the list
-  unsigned int numEffects = 8;
-  String effectList[8] = {"Flash",   "Fade",  "Confetti", "Juggle",
-                          "Rainbow", "Cylon", "Fire",     "Blue Noise"};
+  unsigned int numEffects = 9;
+  String effectList[9] = {"Flash",   "Fade",  "Confetti", "Juggle",
+                          "Rainbow", "Cylon", "Fire",     "Blue Noise", "Visualize"};
   // Effects: General
   unsigned long lastShowLedsTime = 0;
   bool shouldShowLeds();
@@ -105,13 +109,22 @@ class Light {
   byte heat[500];  // TODO: Figure out if i can dynamically allocate this memory
   void handleFire();
   // Effects: Blue Noise
-  uint16_t dist;  // A random number for our noise generator.
-  uint16_t scale = 30;   // Wouldn't recommend changing this on the fly, or the
-                         // animation will be really blocky.
+  uint16_t dist;        // A random number for our noise generator.
+  uint16_t scale = 30;  // Wouldn't recommend changing this on the fly, or the
+                        // animation will be really blocky.
   uint8_t maxChanges = 48;  // Value for blending between palettes.
   CRGBPalette16 targetPalette;
   CRGBPalette16 currentPalette;
   void handleBlueNoise();
+  // Effects: Visualize
+  unsigned int localPort = 7778;
+  char packetBuffer[BUFFER_LEN];
+  uint8_t N = 0;
+#if PRINT_FPS
+  uint16_t fpsCounter = 0;
+  uint32_t secondTimer = 0;
+#endif
+  void handleVisualize(int packetSize);
 
  public:
   Light();

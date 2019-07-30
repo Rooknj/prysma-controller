@@ -1,6 +1,8 @@
 #include "Light.h"
 #include <Arduino.h>  // Enables use of Arduino specific functions and types
 #include <FastLED.h>
+#include <WiFiUdp.h>
+WiFiUDP port;
 
 //************************************************************************
 // Public Methods
@@ -11,6 +13,9 @@ void Light::init(int numLeds, char* stripType, char* colorOrder, int dataPin,
                  int clockPin, byte maxBrightness) {
   this->numLeds = numLeds;
   this->maxBrightness = maxBrightness;
+
+  // Start listening for UDP Packets
+  port.begin(localPort);
 
   // Initialize the leds
   // Currently I need to specify all these combinations manually since FastLED
@@ -42,6 +47,19 @@ void Light::loop() {
 
   // Handle Color transitions
   handleColorTransition();
+
+  // Handle Visualizations over UDP
+  /*
+    Parse the UDP Packet. This is required to be called in the loop every time
+    so that the UDP buffer doesn't overflow.
+    This is also being called inside the loop instead of handleEffect so that it
+    can get 60FPS. Putting handleVisualize inside the handleEffect method causes
+    FPS closer to 30
+   */
+  int packetSize = port.parsePacket();
+  if (this->state.effect == "Visualize") {
+    handleVisualize(packetSize);
+  }
 
   // Handle the currently playing effect
   handleEffect();
@@ -496,4 +514,28 @@ void Light::handleBlueNoise() {
   this->dist += beatsin8(10, 2, 5);
 }
 
+void Light::handleVisualize(int packetSize) {
+  unsigned int expectedPacketSize = this->numLeds * 3;
+  // If packets have been received, interpret the command
+  if (packetSize == expectedPacketSize) {
+    port.read((char*)this->leds, sizeof(this->leds));
+#if PRINT_FPS
+    this->fpsCounter++;
+    Serial.print("/");  // Monitors connection(shows jumps/jitters in packets)
+#endif
+  } else if (packetSize) {
+    Serial.printf("Invalid packet size: %u (expected %u)\n", packetSize,
+                  expectedPacketSize);
+    port.flush();
+    return;
+  }
+
+#if PRINT_FPS
+  if (millis() - this->secondTimer >= 1000U) {
+    this->secondTimer = millis();
+    Serial.printf("FPS: %d\n", this->fpsCounter);
+    this->fpsCounter = 0;
+  }
+#endif
+}
 // ADD_EFFECT: Add the effect handler code below
