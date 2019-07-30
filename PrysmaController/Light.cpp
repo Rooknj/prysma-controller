@@ -119,6 +119,7 @@ void Light::setColor(CRGB color) {
     this->state.effect = NO_EFFECT;
     this->currentColor = color;
     fill_solid(this->leds, this->numLeds, color);
+    FastLED.show();
   } else {
     transitionColorTo(color);
   }
