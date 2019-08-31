@@ -71,7 +71,7 @@ void sendState() {
   char stateMessage[512];
   serializeJson(doc, stateMessage);
 
-  mqttClient.publish(STATE_TOPIC, stateMessage);
+  mqttClient.publish(STATE_TOPIC, stateMessage, true);
   Serial.printf("[INFO]: Published %s to <%s>\n", stateMessage, STATE_TOPIC);
 }
 
@@ -89,7 +89,7 @@ void sendEffectList() {
   char effectListMessage[512];
   serializeJson(doc, effectListMessage);
 
-  mqttClient.publish(EFFECT_LIST_TOPIC, effectListMessage);
+  mqttClient.publish(EFFECT_LIST_TOPIC, effectListMessage, true);
   Serial.printf("[INFO]: Published %s to <%s>\n", effectListMessage,
                 EFFECT_LIST_TOPIC);
 }
